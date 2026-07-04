@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linehaul — Load Board</title>
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --paper:#FAFAF7;
+    --card:#FFFFFF;
+    --ink:#17211B;
+    --ink-soft:#4C5A51;
+    --ink-faint:#7C877F;
+    --line:#DFE4DC;
+    --line-soft:#ECEFE9;
+    --green:#1E5B45;
+    --green-deep:#0F3A2B;
+    --green-tint:#E8F0EB;
+    --amber:#B97F0E;
+    --amber-tint:#FBF3DF;
+    --red:#AF3E2B;
+    --red-tint:#F9E9E5;
+    --blue:#2C5878;
+    --blue-tint:#E7EFF4;
+    --mono:"SF Mono","Cascadia Code","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+    --radius:8px;
+    --shadow:0 1px 2px rgba(23,33,27,.05),0 4px 16px rgba(23,33,27,.06);
+    --shadow-lg:0 8px 40px rgba(15,58,43,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:15px;line-height:1.5;
+    min-height:100vh;
+  }
+  button{font:inherit;cursor:pointer;color:inherit;background:none;border:none}
+  input,select,textarea{font:inherit;color:var(--ink)}
+  ::placeholder{color:var(--ink-faint)}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+  /* ============ DEMO BAR ============ */
+  .demobar{
+    background:var(--ink);color:#D8DED9;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:7px 20px;font-size:12px;
+  }
+  .demobar .tag{
+    font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+    border:1px solid #4A554D;border-radius:3px;padding:2px 7px;color:#F2C14E;
+  }
+  .demobar .spacer{flex:1}
+  .roleswitch{display:flex;border:1px solid #4A554D;border-radius:6px;overflow:hidden}
+  .roleswitch button{padding:4px 14px;font-size:12px;color:#AEB8B0}
+  .roleswitch button.on{background:var(--green);color:#fff}
+  .demobar .reset{color:#8B968D;text-decoration:underline;text-underline-offset:2px;font-size:12px}
+  .demobar .reset:hover{color:#fff}
+
+  /* ============ HEADER ============ */
+  header.site{
+    background:var(--green-deep);color:#fff;
+    padding:0 clamp(16px,4vw,44px);
+    display:flex;align-items:center;gap:28px;min-height:64px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:11px;padding:12px 0}
+  .brand .mark{
+    width:34px;height:34px;border-radius:7px;background:#fff;position:relative;flex:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .brand .mark svg{display:block}
+  .brand .word{font-weight:800;letter-spacing:.16em;font-size:16px}
+  .brand .word span{font-weight:400;letter-spacing:.02em;color:#9DC3B2;font-size:12px;display:block;margin-top:-2px}
+  nav.mainnav{display:flex;gap:4px;flex:1}
+  nav.mainnav button{
+    color:#BCD3C7;padding:8px 14px;border-radius:6px;font-size:14px;
+  }
+  nav.mainnav button:hover{color:#fff}
+  nav.mainnav button.on{background:rgba(255,255,255,.13);color:#fff;font-weight:600}
+  .header-user{display:flex;align-items:center;gap:12px;padding:10px 0}
+  .header-user .who{text-align:right;line-height:1.25}
+  .header-user .who b{font-size:13px;display:block}
+  .header-user .who small{color:#9DC3B2;font-size:11px}
+  .avatar{
+    width:34px;height:34px;border-radius:50%;background:var(--amber);color:#fff;flex:none;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;justify-content:center;
+    border-radius:6px;padding:9px 18px;font-weight:600;font-size:14px;
+    border:1px solid transparent;transition:filter .12s;white-space:nowrap;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn-solid{background:var(--green);color:#fff}
+  .btn-amber{background:var(--amber);color:#fff}
+  .btn-ghost{border-color:var(--line);background:var(--card);color:var(--ink)}
+  .btn-ghost:hover{filter:none;border-color:var(--ink-faint)}
+  .btn-hdr{border-color:rgba(255,255,255,.35);color:#fff}
+  .btn-hdr:hover{background:rgba(255,255,255,.12);filter:none}
+  .btn-danger{border-color:var(--line);color:var(--red);background:var(--card)}
+  .btn-sm{padding:6px 12px;font-size:13px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
+
+  /* ============ LAYOUT ============ */
+  main{max-width:1180px;margin:0 auto;padding:30px clamp(16px,4vw,44px) 80px}
+  .pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+  .pagehead h1{font-size:26px;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+  .pagehead .sub{color:var(--ink-soft);font-size:14px;margin-top:4px;max-width:56ch}
+  .eyebrow{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--green);margin-bottom:7px;
+  }
+
+  /* ============ FILTERS ============ */
+  .filters{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 14px;margin-bottom:20px;
+  }
+  .filters input[type=search],.filters select{
+    border:1px solid var(--line);border-radius:6px;padding:8px 11px;background:#fff;font-size:14px;
+  }
+  .filters input[type=search]{flex:1;min-width:180px}
+  .filters label{font-size:12px;color:var(--ink-faint);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase}
+  .count-pill{
+    margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--ink-soft);
+    background:var(--line-soft);border-radius:99px;padding:5px 12px;white-space:nowrap;
+  }
+
+  /* ============ LOAD CARDS ============ */
+  .loadlist{display:flex;flex-direction:column;gap:12px}
+  .loadcard{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px 22px;
+    display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;
+    gap:14px 26px;align-items:center;
+    transition:border-color .12s, box-shadow .12s;
+  }
+  .loadcard:hover{border-color:var(--green);box-shadow:var(--shadow-lg)}
+  .loadcard.is-full{opacity:.62}
+  .loadcard .refline{
+    display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap;
+  }
+  .ref{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);letter-spacing:.08em}
+  .route{display:flex;align-items:center;gap:0;min-width:0}
+  .route .pt{min-width:0}
+  .route .pt b{font-size:17.5px;font-weight:750;letter-spacing:-.01em;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .route .pt small{color:var(--ink-faint);font-size:11.5px;font-family:var(--mono);letter-spacing:.06em}
+  .route .lane{
+    flex:1;min-width:54px;margin:0 13px;position:relative;height:22px;
+  }
+  .route .lane::before{
+    content:"";position:absolute;left:0;right:0;top:50%;
+    border-top:2px dashed var(--line);
+  }
+  .route .lane::after{
+    content:"";position:absolute;right:-1px;top:50%;width:7px;height:7px;
+    border-top:2px solid var(--ink-faint);border-right:2px solid var(--ink-faint);
+    transform:translateY(-50%) rotate(45deg);margin-top:-1px;
+  }
+  .route .lane .km{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    background:var(--card);padding:0 7px;font-family:var(--mono);
+    font-size:11px;color:var(--ink-soft);white-space:nowrap;
+  }
+  .specs{display:flex;gap:0;flex-wrap:wrap}
+  .spec{padding:0 18px;border-left:1px solid var(--line-soft)}
+  .spec:first-child{border-left:none;padding-left:0}
+  .spec .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+  .spec .v{font-size:14.5px;font-weight:600;margin-top:1px;white-space:nowrap}
+  .spec .v.mono{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+  .rateblock{text-align:right}
+  .rateblock .rate{
+    font-family:var(--mono);font-size:23px;font-weight:700;color:var(--green);
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap;
+  }
+  .rateblock .rate small{font-size:12px;color:var(--ink-faint);font-weight:500}
+  .rateblock .est{font-size:11.5px;color:var(--ink-faint);font-family:var(--mono);margin:2px 0 10px}
+  @media(max-width:860px){
+    .loadcard{grid-template-columns:1fr}
+    .rateblock{text-align:left;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .rateblock .est{margin:0}
+    .rateblock .btn{margin-left:auto}
+  }
+
+  /* ============ CHIPS & BADGES ============ */
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;border-radius:4px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    padding:3px 8px;font-weight:600;white-space:nowrap;
+  }
+  .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .chip.green{background:var(--green-tint);color:var(--green)}
+  .chip.amber{background:var(--amber-tint);color:var(--amber)}
+  .chip.red{background:var(--red-tint);color:var(--red)}
+  .chip.blue{background:var(--blue-tint);color:var(--blue)}
+  .chip.grey{background:var(--line-soft);color:var(--ink-soft)}
+  .commodity{
+    display:inline-block;background:var(--ink);color:#F3F4F1;border-radius:4px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+    padding:3px 9px;font-weight:500;
+  }
+
+  /* ============ TILES (admin/account) ============ */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:26px}
+  .tile{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;box-shadow:var(--shadow);
+  }
+  .tile .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-faint)}
+  .tile .v{font-family:var(--mono);font-size:30px;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .tile .v .unit{font-size:13px;color:var(--ink-faint);font-weight:500}
+  .tile.hot{background:var(--green-deep);border-color:var(--green-deep);color:#fff}
+  .tile.hot .k{color:#9DC3B2}
+
+  /* ============ TABLES ============ */
+  .tablewrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:640px}
+  th{
+    text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-faint);font-weight:600;padding:12px 16px;border-bottom:1px solid var(--line);
+    background:#FCFCFA;white-space:nowrap;
+  }
+  td{padding:13px 16px;border-bottom:1px solid var(--line-soft);font-size:13.5px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  td .mono{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12.5px}
+  td .sub{display:block;color:var(--ink-faint);font-size:11.5px;margin-top:1px}
+  .rowactions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+
+  /* ============ PANELS / SECTIONS ============ */
+  .panel{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px 24px;
+  }
+  .panel + .panel{margin-top:16px}
+  .panel h3{font-size:15px;font-weight:750;display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+  .panel h3 .sub{font-weight:400;font-size:12.5px;color:var(--ink-faint)}
+  .panel .body{margin-top:14px}
+  .twocol{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+  @media(max-width:900px){.twocol{grid-template-columns:1fr}}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:7px 18px;font-size:13.5px}
+  .kv dt{color:var(--ink-faint);font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-top:2px}
+  .kv dd{font-weight:550}
+
+  /* ============ FORMS ============ */
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px 14px}
+  .fgrid .full{grid-column:1/-1}
+  @media(max-width:620px){.fgrid{grid-template-columns:1fr}}
+  .field label{
+    display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px;
+  }
+  .field label .req{color:var(--red)}
+  .field input,.field select,.field textarea{
+    width:100%;border:1px solid var(--line);border-radius:6px;padding:9px 11px;
+    background:#fff;font-size:14px;
+  }
+  .field textarea{resize:vertical;min-height:66px}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px var(--green-tint)}
+  .field .hint{font-size:11.5px;color:var(--ink-faint);margin-top:4px}
+  fieldset{border:none;margin:0;padding:0}
+  .formsection{padding:18px 0;border-top:1px dashed var(--line)}
+  .formsection:first-child{border-top:none;padding-top:0}
+  .formsection > legend{
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--green);font-weight:700;margin-bottom:12px;display:block;
+  }
+  .checkrow{display:flex;gap:8px;flex-wrap:wrap}
+  .checkrow input{position:absolute;opacity:0;pointer-events:none}
+  .checkrow span{
+    display:inline-block;border:1px solid var(--line);border-radius:99px;
+    padding:6px 14px;font-size:13px;background:#fff;cursor:pointer;user-select:none;
+  }
+  .checkrow input:checked + span{background:var(--green);border-color:var(--green);color:#fff}
+  .checkrow input:focus-visible + span{outline:2px solid var(--green);outline-offset:2px}
+  .docupload{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    border:1px dashed var(--line);border-radius:6px;padding:10px 13px;background:#FCFCFA;
+  }
+  .docupload + .docupload{margin-top:8px}
+  .docupload .n{font-size:13.5px;font-weight:600}
+  .docupload .n small{display:block;font-weight:400;color:var(--ink-faint);font-size:11.5px}
+  .docupload .fake{font-family:var(--mono);font-size:11px;color:var(--green);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+  .formfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;flex-wrap:wrap;align-items:center}
+  .formfoot .note{margin-right:auto;font-size:12px;color:var(--ink-faint);max-width:40ch}
+
+  /* ============ MODALS ============ */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,26,20,.55);backdrop-filter:blur(2px);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:5vh 16px 16px;z-index:50;overflow-y:auto;
+    animation:fadein .16s ease;
+  }
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  .modal{
+    background:var(--paper);border-radius:12px;box-shadow:var(--shadow-lg);
+    width:100%;max-width:640px;animation:pop .18s ease;
+  }
+  .modal.wide{max-width:760px}
+  @keyframes pop{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+  .modal-head{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+    padding:20px 24px 0;
+  }
+  .modal-head h2{font-size:19px;font-weight:800;letter-spacing:-.01em}
+  .modal-head .x{
+    flex:none;width:32px;height:32px;border-radius:6px;border:1px solid var(--line);
+    background:var(--card);font-size:15px;line-height:1;color:var(--ink-soft);
+  }
+  .modal-head .x:hover{border-color:var(--ink-faint)}
+  .modal-body{padding:16px 24px 24px}
+
+  /* ============ TABS (admin) ============ */
+  .tabs{display:flex;gap:2px;border-bottom:2px solid var(--line);margin-bottom:22px;flex-wrap:wrap}
+  .tabs button{
+    padding:9px 16px;font-size:14px;color:var(--ink-soft);border-bottom:2px solid transparent;
+    margin-bottom:-2px;font-weight:550;
+  }
+  .tabs button:hover{color:var(--ink)}
+  .tabs button.on{color:var(--green);border-bottom-color:var(--green);font-weight:700}
+  .tabs button .n{
+    font-family:var(--mono);font-size:10.5px;background:var(--amber);color:#fff;
+    border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:1px;
+  }
+
+  /* ============ MISC ============ */
+  .empty{
+    text-align:center;padding:52px 20px;color:var(--ink-faint);
+    border:1px dashed var(--line);border-radius:var(--radius);background:var(--card);
+  }
+  .empty b{display:block;color:var(--ink-soft);font-size:15px;margin-bottom:4px}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;border-radius:8px;padding:11px 20px;
+    font-size:14px;box-shadow:var(--shadow-lg);z-index:90;
+    display:flex;align-items:center;gap:9px;animation:pop .2s ease;max-width:90vw;
+  }
+  .toast::before{content:"";width:8px;height:8px;border-radius:50%;background:#5FBF8F;flex:none}
+  .signin-strip{
+    background:var(--green-tint);border:1px solid #CBDED3;border-radius:var(--radius);
+    padding:13px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    font-size:13.5px;color:var(--green-deep);
+  }
+  .signin-strip b{font-weight:700}
+  .signin-strip .btn{margin-left:auto}
+  footer.site{
+    border-top:1px solid var(--line);color:var(--ink-faint);font-size:12px;
+    padding:22px clamp(16px,4vw,44px);display:flex;gap:18px;flex-wrap:wrap;justify-content:space-between;
+    font-family:var(--mono);
+  }
+  .demoaccounts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .demoaccounts button{
+    display:flex;align-items:center;gap:12px;text-align:left;
+    border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--card);
+    transition:border-color .12s;
+  }
+  .demoaccounts button:hover{border-color:var(--green)}
+  .demoaccounts .who b{display:block;font-size:14px}
+  .demoaccounts .who small{color:var(--ink-faint);font-size:12px}
+  .orline{display:flex;align-items:center;gap:12px;color:var(--ink-faint);font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;margin:18px 0 4px}
+  .orline::before,.orline::after{content:"";flex:1;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<div class="demobar">
+  <span class="tag">DEMO MOCKUP</span>
+  <span>Sample data only — no live bookings. Flip the view to present both sides:</span>
+  <span class="spacer"></span>
+  <div class="roleswitch" role="group" aria-label="Demo view">
+    <button id="rs-transporter" onclick="setRole('transporter')">Transporter view</button>
+    <button id="rs-admin" onclick="setRole('admin')">Admin view</button>
+  </div>
+  <button class="reset" onclick="resetDemo()">Reset demo data</button>
+</div>
+
+<header class="site">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path d="M2 15 L9 15 L13 7 L20 7" stroke="#0F3A2B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="2.5" cy="15" r="2.4" fill="#B97F0E"/>
+        <circle cx="19.5" cy="7" r="2.4" fill="#1E5B45"/>
+      </svg>
+    </div>
+    <div class="word">LINEHAUL<span>load board &middot; placeholder name</span></div>
+  </div>
+  <nav class="mainnav" id="mainnav"></nav>
+  <div class="header-user" id="headeruser"></div>
+</header>
+
+<main id="app"></main>
+
+<footer class="site">
+  <span>LINEHAUL — unbranded booking system mockup for cwgholdings.net</span>
+  <span>rates shown per ton &middot; all figures are sample data</span>
+</footer>
+
+<div id="modalroot"></div>
+<div id="toastroot"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   LINEHAUL — load booking mockup (front-end only)
+   All data lives in localStorage so the demo feels persistent.
+   ===================================================================== */
+
+const LS_KEY = "linehaul-demo-v1";
+
+const seed = () => ({
+  role: "transporter",
+  view: "board",
+  adminTab: "overview",
+  userId: null,
+  loads: [
+    { id:"LD-2141", from:"Steelpoort", fromP:"Limpopo", to:"Richards Bay", toP:"KwaZulu-Natal",
+      commodity:"Chrome concentrate", tonnage:34, km:641, rate:620, date:"2026-07-08",
+      trucks:6, remaining:6, status:"open", notes:"Side tippers only. Loading at mine weighbridge from 06:00. Tarps required." },
+    { id:"LD-2140", from:"Emalahleni", fromP:"Mpumalanga", to:"Maputo", toP:"Mozambique",
+      commodity:"Coal (RB1)", tonnage:34, km:411, rate:540, date:"2026-07-07",
+      trucks:10, remaining:7, status:"open", notes:"Cross-border — valid passports & Lebombo border documentation required." },
+    { id:"LD-2139", from:"Hotazel", fromP:"Northern Cape", to:"Gqeberha", toP:"Eastern Cape",
+      commodity:"Manganese ore", tonnage:34, km:991, rate:780, date:"2026-07-10",
+      trucks:8, remaining:8, status:"open", notes:"Port slot confirmed. Offloading at PE bulk terminal, 24h turnaround." },
+    { id:"LD-2138", from:"Rustenburg", fromP:"North West", to:"Durban", toP:"KwaZulu-Natal",
+      commodity:"Chrome ore", tonnage:34, km:700, rate:650, date:"2026-07-09",
+      trucks:4, remaining:2, status:"open", notes:"Interlinks preferred. Standing time paid after 6 hours." },
+    { id:"LD-2137", from:"Johannesburg", fromP:"Gauteng", to:"Cape Town", toP:"Western Cape",
+      commodity:"Bagged fertiliser", tonnage:30, km:1398, rate:980, date:"2026-07-12",
+      trucks:3, remaining:3, status:"open", notes:"Tautliners only. Palletised, 50 kg bags. POD required on delivery." },
+    { id:"LD-2136", from:"Musina", fromP:"Limpopo", to:"Johannesburg", toP:"Gauteng",
+      commodity:"Copper cathodes", tonnage:32, km:522, rate:590, date:"2026-07-11",
+      trucks:5, remaining:5, status:"open", notes:"High-value cargo — GIT cover of R5m minimum, escort arranged by shipper." },
+    { id:"LD-2135", from:"Bethal", fromP:"Mpumalanga", to:"Durban", toP:"KwaZulu-Natal",
+      commodity:"Maize (bulk)", tonnage:34, km:570, rate:560, date:"2026-07-06",
+      trucks:12, remaining:0, status:"full", notes:"Silo loading. Grain-tight bodies required." },
+    { id:"LD-2134", from:"Lephalale", fromP:"Limpopo", to:"Richards Bay", toP:"KwaZulu-Natal",
+      commodity:"Coal (export)", tonnage:34, km:904, rate:720, date:"2026-07-14",
+      trucks:15, remaining:15, status:"open", notes:"Ongoing contract volume — repeat loads available weekly for reliable carriers." }
+  ],
+  transporters: [
+    { id:"TR-101", company:"Mzansi Haulage (Pty) Ltd", contact:"Sipho Ndlovu", phone:"082 555 0143",
+      email:"ops@mzansihaulage.co.za", base:"Middelburg, Mpumalanga", reg:"2015/482910/07",
+      fleet:12, types:["34t side tipper","Interlink flat deck"], git:"R2 500 000",
+      docs:[
+        {name:"GIT insurance certificate", status:"verified", expiry:"2027-02-28"},
+        {name:"Operating licence / operator card", status:"verified", expiry:"2026-11-30"},
+        {name:"Tax clearance (SARS pin)", status:"pending", expiry:"2026-09-01"},
+        {name:"Roadworthy certificates (fleet)", status:"expired", expiry:"2026-06-15"}
+      ]},
+    { id:"TR-102", company:"Karoo Freight Lines", contact:"Anele Jacobs", phone:"071 555 0821",
+      email:"anele@karoofreight.co.za", base:"Kimberley, Northern Cape", reg:"2011/220476/07",
+      fleet:28, types:["Tautliner","Interlink flat deck","Tanker"], git:"R5 000 000",
+      docs:[
+        {name:"GIT insurance certificate", status:"verified", expiry:"2026-12-31"},
+        {name:"Operating licence / operator card", status:"verified", expiry:"2027-03-31"},
+        {name:"Tax clearance (SARS pin)", status:"verified", expiry:"2026-10-12"},
+        {name:"Roadworthy certificates (fleet)", status:"verified", expiry:"2026-12-01"}
+      ]},
+    { id:"TR-103", company:"Bakone Logistics", contact:"Tumi Mokoena", phone:"083 555 3390",
+      email:"tumi@bakonelog.co.za", base:"Polokwane, Limpopo", reg:"2019/031558/07",
+      fleet:6, types:["34t side tipper"], git:"R1 500 000",
+      docs:[
+        {name:"GIT insurance certificate", status:"pending", expiry:"2027-01-20"},
+        {name:"Operating licence / operator card", status:"verified", expiry:"2026-10-05"},
+        {name:"Tax clearance (SARS pin)", status:"pending", expiry:"2026-08-30"},
+        {name:"Roadworthy certificates (fleet)", status:"pending", expiry:"2026-11-11"}
+      ]}
+  ],
+  bookings: [
+    { id:"BK-3308", loadId:"LD-2140", trId:"TR-102", trucks:3, availDate:"2026-07-07",
+      note:"Three interlinks positioned in Witbank, cross-border permits in place.",
+      status:"approved", created:"2026-07-02" },
+    { id:"BK-3309", loadId:"LD-2138", trId:"TR-101", trucks:2, availDate:"2026-07-09",
+      note:"Two side tippers available, drivers experienced on the N3 route.",
+      status:"pending", created:"2026-07-03" },
+    { id:"BK-3310", loadId:"LD-2141", trId:"TR-103", trucks:4, availDate:"2026-07-08",
+      note:"Can position trucks at Steelpoort the evening before loading.",
+      status:"pending", created:"2026-07-04" }
+  ],
+  seq: { load: 2142, booking: 3311, tr: 104 }
+});
+
+let S;
+function loadState(){
+  try{ const raw = localStorage.getItem(LS_KEY); if(raw){ S = JSON.parse(raw); return; } }catch(e){}
+  S = seed();
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+function resetDemo(){ localStorage.removeItem(LS_KEY); S = seed(); render(); toast("Demo data reset"); }
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtNum = n => Number(n).toLocaleString("en-ZA").replace(/,/g, " ");
+const fmtR = n => "R " + fmtNum(n);
+const fmtDate = iso => { const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-ZA", {day:"2-digit", month:"short", year:"numeric"}); };
+const load = id => S.loads.find(l => l.id === id);
+const tr = id => S.transporters.find(t => t.id === id);
+const me = () => S.userId ? tr(S.userId) : null;
+const initials = name => name.split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+const pendingCount = () => S.bookings.filter(b => b.status === "pending").length;
+
+const DOC_CHIP = { verified:["green","Verified"], pending:["amber","Pending review"], expired:["red","Expired"] };
+const BK_CHIP  = { pending:["amber","Awaiting approval"], approved:["green","Approved"], declined:["red","Declined"] };
+
+function complianceState(t){
+  if (t.docs.some(d => d.status === "expired")) return ["red","Action needed"];
+  if (t.docs.some(d => d.status === "pending")) return ["amber","Under review"];
+  return ["green","Compliant"];
+}
+
+let toastTimer = null;
+function toast(msg){
+  $("toastroot").innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $("toastroot").innerHTML = ""; }, 3200);
+}
+
+/* ---------- navigation ---------- */
+function setRole(r){
+  S.role = r;
+  S.view = r === "admin" ? "admin" : "board";
+  save(); render();
+}
+function nav(v){ S.view = v; save(); render(); window.scrollTo({top:0}); }
+function adminTab(t){ S.adminTab = t; save(); render(); }
+
+/* ---------- header ---------- */
+function renderHeader(){
+  $("rs-transporter").className = S.role === "transporter" ? "on" : "";
+  $("rs-admin").className = S.role === "admin" ? "on" : "";
+
+  let navHtml = "";
+  if (S.role === "transporter"){
+    navHtml = `
+      <button class="${S.view==="board"?"on":""}" onclick="nav('board')">Available loads</button>
+      <button class="${S.view==="account"?"on":""}" onclick="nav('account')">My account</button>`;
+  } else {
+    navHtml = `<button class="on">Admin console</button>`;
+  }
+  $("mainnav").innerHTML = navHtml;
+
+  let userHtml = "";
+  if (S.role === "admin"){
+    userHtml = `
+      <div class="who"><b>CWG Admin</b><small>owner access</small></div>
+      <div class="avatar" style="background:var(--green)">CW</div>`;
+  } else if (me()){
+    const m = me();
+    userHtml = `
+      <div class="who"><b>${esc(m.company)}</b><small>${esc(m.contact)}</small></div>
+      <div class="avatar">${esc(initials(m.company))}</div>
+      <button class="btn btn-hdr btn-sm" onclick="signOut()">Sign out</button>`;
+  } else {
+    userHtml = `<button class="btn btn-hdr btn-sm" onclick="openAuth()">Sign in / Register</button>`;
+  }
+  $("headeruser").innerHTML = userHtml;
+}
+
+function signOut(){ S.userId = null; save(); render(); toast("Signed out"); }
+
+/* =====================================================================
+   TRANSPORTER — LOADS BOARD
+   ===================================================================== */
+const filters = { q:"", commodity:"all", sort:"date" };
+
+function renderBoard(){
+  const commodities = [...new Set(S.loads.map(l => l.commodity))].sort();
+  let list = S.loads.filter(l => l.status !== "closed");
+  if (filters.commodity !== "all") list = list.filter(l => l.commodity === filters.commodity);
+  if (filters.q){
+    const q = filters.q.toLowerCase();
+    list = list.filter(l => (l.from + " " + l.to + " " + l.fromP + " " + l.toP).toLowerCase().includes(q));
+  }
+  list.sort((a,b) =>
+    filters.sort === "rate" ? b.rate - a.rate :
+    filters.sort === "km"   ? a.km - b.km :
+    a.date.localeCompare(b.date));
+
+  const stripHtml = me() ? "" : `
+    <div class="signin-strip">
+      <span><b>New here?</b> Create a free carrier account once — your fleet and compliance details are saved, so booking a load takes seconds.</span>
+      <button class="btn btn-solid btn-sm" onclick="openAuth()">Sign in / Register</button>
+    </div>`;
+
+  const cards = list.map(l => {
+    const full = l.remaining <= 0;
+    return `
+    <article class="loadcard ${full ? "is-full" : ""}">
+      <div>
+        <div class="refline">
+          <span class="ref">${esc(l.id)}</span>
+          <span class="commodity">${esc(l.commodity)}</span>
+          ${ full
+            ? `<span class="chip grey">Fully booked</span>`
+            : `<span class="chip green">${l.remaining} of ${l.trucks} trucks open</span>` }
+        </div>
+        <div class="route">
+          <div class="pt"><b>${esc(l.from)}</b><small>${esc(l.fromP)}</small></div>
+          <div class="lane"><span class="km">${fmtNum(l.km)} km</span></div>
+          <div class="pt" style="text-align:right"><b>${esc(l.to)}</b><small>${esc(l.toP)}</small></div>
+        </div>
+      </div>
+      <div class="specs">
+        <div class="spec"><div class="k">Tonnage</div><div class="v mono">${l.tonnage} t / truck</div></div>
+        <div class="spec"><div class="k">Loading date</div><div class="v mono">${fmtDate(l.date)}</div></div>
+      </div>
+      <div class="rateblock">
+        <div class="rate">${fmtR(l.rate)}<small> / ton</small></div>
+        <div class="est">&asymp; ${fmtR(l.rate * l.tonnage)} per truck</div>
+        <button class="btn ${full ? "btn-ghost" : "btn-solid"}" ${full ? "disabled" : ""}
+          onclick="openLoadDetail('${l.id}')">${full ? "Fully booked" : "View & book"}</button>
+      </div>
+    </article>`;
+  }).join("");
+
+  return `
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Load board &middot; updated daily by CWG</div>
+        <h1>Available loads</h1>
+        <p class="sub">Live freight posted by the CWG team. Pick a lane, check the rate, and book your trucks in — approval usually comes back the same day.</p>
+      </div>
+    </div>
+    ${stripHtml}
+    <div class="filters">
+      <input type="search" placeholder="Search origin or destination&hellip;" value="${esc(filters.q)}"
+        oninput="filters.q=this.value; render(); this.focus(); this.setSelectionRange(this.value.length,this.value.length)" aria-label="Search routes">
+      <label for="f-com">Commodity</label>
+      <select id="f-com" onchange="filters.commodity=this.value; render()">
+        <option value="all">All</option>
+        ${commodities.map(c => `<option ${filters.commodity===c?"selected":""} value="${esc(c)}">${esc(c)}</option>`).join("")}
+      </select>
+      <label for="f-sort">Sort</label>
+      <select id="f-sort" onchange="filters.sort=this.value; render()">
+        <option value="date" ${filters.sort==="date"?"selected":""}>Loading date</option>
+        <option value="rate" ${filters.sort==="rate"?"selected":""}>Best rate</option>
+        <option value="km" ${filters.sort==="km"?"selected":""}>Shortest distance</option>
+      </select>
+      <span class="count-pill">${list.length} load${list.length===1?"":"s"}</span>
+    </div>
+    <div class="loadlist">
+      ${cards || `<div class="empty"><b>No loads match those filters</b>Try clearing the search or choosing another commodity.</div>`}
+    </div>`;
+}
+
+/* ---------- load detail + booking modal ---------- */
+function openLoadDetail(id){
+  const l = load(id);
+  const m = me();
+  const alreadyRequested = m && S.bookings.some(b => b.loadId === id && b.trId === m.id && b.status !== "declined");
+
+  let bookSection;
+  if (!m){
+    bookSection = `
+      <div class="signin-strip" style="margin:18px 0 0">
+        <span><b>Sign in to book this load.</b> Your saved fleet details will pre-fill the request.</span>
+        <button class="btn btn-solid btn-sm" onclick="closeModal(); openAuth('${id}')">Sign in / Register</button>
+      </div>`;
+  } else if (alreadyRequested){
+    bookSection = `
+      <div class="signin-strip" style="margin:18px 0 0">
+        <span><b>Request sent.</b> You have already requested this load — track it under <b>My account</b>.</span>
+      </div>`;
+  } else {
+    const maxT = Math.min(l.remaining, m.fleet);
+    bookSection = `
+      <form onsubmit="submitBooking(event,'${id}')" style="margin-top:18px">
+        <div class="formsection" style="border-top:1px dashed var(--line)">
+          <legend>Your booking request &middot; pre-filled from your profile</legend>
+          <div class="fgrid">
+            <div class="field">
+              <label for="bk-trucks">Trucks offered <span class="req">*</span></label>
+              <select id="bk-trucks" required>
+                ${Array.from({length:maxT}, (_,i)=>`<option value="${i+1}">${i+1} truck${i?"s":""} &middot; &asymp; ${fmtR((i+1)*l.tonnage*l.rate)}</option>`).join("")}
+              </select>
+              <div class="hint">${l.remaining} still open on this load &middot; your registered fleet: ${m.fleet}</div>
+            </div>
+            <div class="field">
+              <label for="bk-date">Trucks available from <span class="req">*</span></label>
+              <input id="bk-date" type="date" required value="${esc(l.date)}">
+            </div>
+            <div class="field full">
+              <label for="bk-note">Note to CWG (optional)</label>
+              <textarea id="bk-note" placeholder="e.g. trucks positioned nearby, preferred loading time&hellip;"></textarea>
+            </div>
+          </div>
+          <div class="formfoot">
+            <span class="note">Booking as <b>${esc(m.company)}</b> &middot; ${esc(m.contact)} &middot; ${esc(m.phone)}</span>
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-amber">Send booking request</button>
+          </div>
+        </div>
+      </form>`;
+  }
+
+  showModal(`
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">${esc(l.id)} &middot; ${esc(l.commodity)}</div>
+        <h2>${esc(l.from)} &rarr; ${esc(l.to)}</h2>
+      </div>
+      <button class="x" onclick="closeModal()" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="tiles" style="margin-bottom:16px;grid-template-columns:repeat(2,minmax(0,1fr))">
+        <div class="tile"><div class="k">Rate offered</div><div class="v" style="color:var(--green)">${fmtR(l.rate)}<span class="unit"> /t</span></div></div>
+        <div class="tile"><div class="k">Tonnage / truck</div><div class="v">${l.tonnage}<span class="unit"> t</span></div></div>
+        <div class="tile"><div class="k">Distance</div><div class="v">${fmtNum(l.km)}<span class="unit"> km</span></div></div>
+        <div class="tile"><div class="k">Per truck (est.)</div><div class="v">${fmtNum(l.rate*l.tonnage)}<span class="unit"> R</span></div></div>
+      </div>
+      <dl class="kv">
+        <dt>Loading date</dt><dd>${fmtDate(l.date)}</dd>
+        <dt>Trucks needed</dt><dd>${l.remaining} of ${l.trucks} still open</dd>
+        <dt>Load notes</dt><dd>${esc(l.notes)}</dd>
+      </dl>
+      ${bookSection}
+    </div>`);
+}
+
+function submitBooking(e, loadId){
+  e.preventDefault();
+  const l = load(loadId), m = me();
+  const b = {
+    id: "BK-" + S.seq.booking++,
+    loadId, trId: m.id,
+    trucks: Number($("bk-trucks").value),
+    availDate: $("bk-date").value,
+    note: $("bk-note").value.trim(),
+    status: "pending",
+    created: new Date().toISOString().slice(0,10)
+  };
+  S.bookings.unshift(b);
+  save(); closeModal(); render();
+  toast(`Request ${b.id} sent — CWG will confirm shortly`);
+}
+
+/* =====================================================================
+   AUTH — sign in / register
+   ===================================================================== */
+let authReturnLoad = null;
+
+function openAuth(returnLoadId){
+  authReturnLoad = returnLoadId || null;
+  showModal(`
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">Carrier access</div>
+        <h2>Sign in to your account</h2>
+      </div>
+      <button class="x" onclick="closeModal()" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;color:var(--ink-soft)">This is a demo — pick a sample account to see how a returning transporter is recognised, with fleet and compliance already on file.</p>
+      <div class="demoaccounts">
+        ${S.transporters.map(t => `
+          <button onclick="signInAs('${t.id}')">
+            <span class="avatar" style="background:var(--green)">${esc(initials(t.company))}</span>
+            <span class="who"><b>${esc(t.company)}</b><small>${esc(t.base)} &middot; fleet of ${t.fleet}</small></span>
+          </button>`).join("")}
+      </div>
+      <div class="orline">OR</div>
+      <div style="text-align:center;padding-top:10px">
+        <button class="btn btn-ghost" onclick="openRegister()">Register a new transporter account</button>
+      </div>
+    </div>`);
+}
+
+function signInAs(id){
+  S.userId = id; save(); closeModal();
+  const t = tr(id);
+  toast(`Welcome back, ${t.contact} — signed in as ${t.company}`);
+  if (authReturnLoad){ render(); openLoadDetail(authReturnLoad); authReturnLoad = null; }
+  else render();
+}
+
+const TRUCK_TYPES = ["34t side tipper","Interlink flat deck","Tautliner","Tanker","Refrigerated","Lowbed"];
+const DOC_NAMES = [
+  ["GIT insurance certificate","Goods-in-transit cover — minimum depends on cargo value"],
+  ["Operating licence / operator card","Per NLTA operating licence requirements"],
+  ["Tax clearance (SARS pin)","Verified against SARS eFiling"],
+  ["Roadworthy certificates (fleet)","Current certificates for all trucks offered"]
+];
+
+function openRegister(){
+  showModal(`
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">One-time setup &middot; saved for every future booking</div>
+        <h2>Register your transport company</h2>
+      </div>
+      <button class="x" onclick="closeModal()" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <form onsubmit="submitRegister(event)">
+        <fieldset class="formsection">
+          <legend>1 &middot; Company details</legend>
+          <div class="fgrid">
+            <div class="field"><label for="r-company">Company name <span class="req">*</span></label>
+              <input id="r-company" required placeholder="e.g. Thuto Transport (Pty) Ltd"></div>
+            <div class="field"><label for="r-reg">Company registration no.</label>
+              <input id="r-reg" placeholder="e.g. 2018/123456/07"></div>
+            <div class="field"><label for="r-contact">Contact person <span class="req">*</span></label>
+              <input id="r-contact" required placeholder="Full name"></div>
+            <div class="field"><label for="r-phone">Phone <span class="req">*</span></label>
+              <input id="r-phone" required type="tel" placeholder="0XX XXX XXXX"></div>
+            <div class="field"><label for="r-email">Email <span class="req">*</span></label>
+              <input id="r-email" required type="email" placeholder="ops@yourcompany.co.za"></div>
+            <div class="field"><label for="r-base">Base location <span class="req">*</span></label>
+              <input id="r-base" required placeholder="Town, Province"></div>
+          </div>
+        </fieldset>
+        <fieldset class="formsection">
+          <legend>2 &middot; Fleet profile</legend>
+          <div class="fgrid">
+            <div class="field"><label for="r-fleet">Fleet size (trucks) <span class="req">*</span></label>
+              <input id="r-fleet" required type="number" min="1" max="500" placeholder="e.g. 8"></div>
+            <div class="field"><label for="r-git">GIT cover amount</label>
+              <input id="r-git" placeholder="e.g. R2 500 000"></div>
+            <div class="field full">
+              <label>Truck types operated <span class="req">*</span></label>
+              <div class="checkrow" id="r-types">
+                ${TRUCK_TYPES.map((t,i) => `<label><input type="checkbox" value="${esc(t)}" ${i===0?"checked":""}><span>${esc(t)}</span></label>`).join("")}
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset class="formsection">
+          <legend>3 &middot; Compliance documents</legend>
+          <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:12px">Upload once — the CWG team verifies these before your first load. You'll see the status on your account.</p>
+          ${DOC_NAMES.map(d => `
+            <div class="docupload">
+              <div class="n">${esc(d[0])}<small>${esc(d[1])}</small></div>
+              <button type="button" class="fake" onclick="this.textContent='attached ✓'; this.style.color='var(--green)'">Attach file</button>
+            </div>`).join("")}
+        </fieldset>
+        <div class="formfoot">
+          <span class="note">By registering you agree to CWG's carrier terms. Documents are reviewed within 1 business day.</span>
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-solid">Create account</button>
+        </div>
+      </form>
+    </div>`, true);
+}
+
+function submitRegister(e){
+  e.preventDefault();
+  const types = [...document.querySelectorAll("#r-types input:checked")].map(i => i.value);
+  if (!types.length){ toast("Select at least one truck type"); return; }
+  const t = {
+    id: "TR-" + S.seq.tr++,
+    company: $("r-company").value.trim(),
+    contact: $("r-contact").value.trim(),
+    phone: $("r-phone").value.trim(),
+    email: $("r-email").value.trim(),
+    base: $("r-base").value.trim(),
+    reg: $("r-reg").value.trim() || "—",
+    fleet: Number($("r-fleet").value),
+    types,
+    git: $("r-git").value.trim() || "—",
+    docs: DOC_NAMES.map(d => ({ name:d[0], status:"pending", expiry:"—" }))
+  };
+  S.transporters.push(t);
+  S.userId = t.id;
+  save(); closeModal(); render();
+  toast(`Account created — welcome, ${t.company}. Documents sent for review.`);
+  if (authReturnLoad){ openLoadDetail(authReturnLoad); authReturnLoad = null; }
+}
+
+/* =====================================================================
+   TRANSPORTER — MY ACCOUNT
+   ===================================================================== */
+function renderAccount(){
+  const m = me();
+  if (!m){
+    return `
+      <div class="pagehead"><div>
+        <div class="eyebrow">My account</div><h1>You're not signed in</h1>
+        <p class="sub">Sign in to see your saved company profile, fleet details, compliance status and booking history.</p>
+      </div></div>
+      <div class="empty" style="padding:70px 20px">
+        <b>One account, every booking pre-filled</b>
+        Register once and never re-type your fleet or compliance details again.<br><br>
+        <button class="btn btn-solid" onclick="openAuth()">Sign in / Register</button>
+      </div>`;
+  }
+
+  const [cState, cLabel] = complianceState(m);
+  const myBookings = S.bookings.filter(b => b.trId === m.id);
+
+  const bookingRows = myBookings.map(b => {
+    const l = load(b.loadId);
+    const [bc, bl] = BK_CHIP[b.status];
+    return `<tr>
+      <td><span class="mono">${esc(b.id)}</span><span class="sub">${fmtDate(b.created)}</span></td>
+      <td><b>${esc(l.from)} &rarr; ${esc(l.to)}</b><span class="sub">${esc(l.commodity)} &middot; ${esc(l.id)}</span></td>
+      <td class="mono">${b.trucks} truck${b.trucks>1?"s":""}</td>
+      <td class="mono">${fmtR(l.rate)} /t</td>
+      <td class="mono">${fmtR(b.trucks * l.tonnage * l.rate)}</td>
+      <td><span class="chip ${bc}">${bl}</span></td>
+    </tr>`;
+  }).join("");
+
+  return `
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Carrier account &middot; ${esc(m.id)}</div>
+        <h1>${esc(m.company)}</h1>
+        <p class="sub">Your details are saved and pre-fill every booking request — update them any time.</p>
+      </div>
+      <span class="chip ${cState}" style="font-size:12px;padding:6px 13px">Compliance: ${cLabel}</span>
+    </div>
+
+    <div class="twocol">
+      <div>
+        <section class="panel">
+          <h3>Company profile <span class="sub"><button class="fake" style="font-family:var(--mono);font-size:11px;color:var(--green);text-decoration:underline;text-underline-offset:3px" onclick="toast('Profile editing — wired up in the full build')">Edit</button></span></h3>
+          <div class="body">
+            <dl class="kv">
+              <dt>Contact</dt><dd>${esc(m.contact)}</dd>
+              <dt>Phone</dt><dd>${esc(m.phone)}</dd>
+              <dt>Email</dt><dd>${esc(m.email)}</dd>
+              <dt>Base</dt><dd>${esc(m.base)}</dd>
+              <dt>Reg no.</dt><dd>${esc(m.reg)}</dd>
+            </dl>
+          </div>
+        </section>
+        <section class="panel">
+          <h3>Fleet</h3>
+          <div class="body">
+            <dl class="kv">
+              <dt>Fleet size</dt><dd>${m.fleet} trucks</dd>
+              <dt>GIT cover</dt><dd>${esc(m.git)}</dd>
+              <dt>Types</dt><dd>${m.types.map(t=>`<span class="chip grey" style="margin:1px 3px 1px 0">${esc(t)}</span>`).join("")}</dd>
+            </dl>
+          </div>
+        </section>
+        <section class="panel">
+          <h3>Compliance documents</h3>
+          <div class="body">
+            ${m.docs.map(d => {
+              const [dc, dl] = DOC_CHIP[d.status];
+              return `<div class="docupload" style="background:#fff">
+                <div class="n">${esc(d.name)}<small>${d.expiry === "—" ? "awaiting review" : "expires " + fmtDate(d.expiry)}</small></div>
+                <span class="chip ${dc}">${dl}</span>
+              </div>`;
+            }).join("")}
+            <p style="font-size:12px;color:var(--ink-faint);margin-top:10px">Expired or missing documents pause new bookings until re-uploaded.</p>
+          </div>
+        </section>
+      </div>
+      <div>
+        <section class="panel">
+          <h3>My bookings <span class="sub">${myBookings.length} total</span></h3>
+          <div class="body">
+            ${ myBookings.length
+              ? `<div class="tablewrap" style="box-shadow:none"><table>
+                  <thead><tr><th>Request</th><th>Route</th><th>Trucks</th><th>Rate</th><th>Est. value</th><th>Status</th></tr></thead>
+                  <tbody>${bookingRows}</tbody></table></div>`
+              : `<div class="empty"><b>No bookings yet</b>Head to the load board and book your first load.<br><br><button class="btn btn-solid btn-sm" onclick="nav('board')">Browse loads</button></div>` }
+          </div>
+        </section>
+      </div>
+    </div>`;
+}
+
+/* =====================================================================
+   ADMIN CONSOLE
+   ===================================================================== */
+function renderAdmin(){
+  const t = S.adminTab;
+  const tabs = `
+    <div class="tabs" role="tablist">
+      <button class="${t==="overview"?"on":""}" onclick="adminTab('overview')">Overview</button>
+      <button class="${t==="loads"?"on":""}" onclick="adminTab('loads')">Loads</button>
+      <button class="${t==="requests"?"on":""}" onclick="adminTab('requests')">Booking requests${pendingCount() ? `<span class="n">${pendingCount()}</span>` : ""}</button>
+      <button class="${t==="transporters"?"on":""}" onclick="adminTab('transporters')">Transporters</button>
+    </div>`;
+
+  return `
+    <div class="pagehead">
+      <div>
+        <div class="eyebrow">Admin console &middot; CWG Holdings</div>
+        <h1>${
+          t==="overview" ? "Operations overview" :
+          t==="loads" ? "Manage loads" :
+          t==="requests" ? "Booking requests" : "Registered transporters"}</h1>
+      </div>
+      ${t==="loads" ? `<button class="btn btn-amber" onclick="openLoadForm()">+ Post new load</button>` : ""}
+    </div>
+    ${tabs}
+    ${ t==="overview" ? adminOverview() :
+       t==="loads" ? adminLoads() :
+       t==="requests" ? adminRequests() : adminTransporters() }`;
+}
+
+function adminOverview(){
+  const open = S.loads.filter(l => l.status === "open").length;
+  const trucksOpen = S.loads.filter(l => l.status !== "closed").reduce((s,l) => s + l.remaining, 0);
+  const booked = S.bookings.filter(b => b.status === "approved").reduce((s,b) => s + b.trucks, 0);
+  return `
+    <div class="tiles">
+      <div class="tile hot"><div class="k">Pending requests</div><div class="v">${pendingCount()}</div></div>
+      <div class="tile"><div class="k">Open loads</div><div class="v">${open}</div></div>
+      <div class="tile"><div class="k">Trucks still needed</div><div class="v">${trucksOpen}</div></div>
+      <div class="tile"><div class="k">Trucks booked</div><div class="v">${booked}</div></div>
+      <div class="tile"><div class="k">Carriers registered</div><div class="v">${S.transporters.length}</div></div>
+    </div>
+    <section class="panel">
+      <h3>Needs your attention</h3>
+      <div class="body">
+        ${ pendingCount()
+          ? requestCards(S.bookings.filter(b => b.status === "pending"))
+          : `<div class="empty"><b>All clear</b>No booking requests waiting for approval.</div>` }
+      </div>
+    </section>`;
+}
+
+/* ---------- admin: loads ---------- */
+function adminLoads(){
+  const rows = S.loads.map(l => {
+    const st = l.status === "closed" ? ["grey","Closed"] :
+               l.remaining <= 0 ? ["blue","Fully booked"] : ["green","Open"];
+    return `<tr>
+      <td><span class="mono">${esc(l.id)}</span><span class="sub">${fmtDate(l.date)}</span></td>
+      <td><b>${esc(l.from)} &rarr; ${esc(l.to)}</b><span class="sub">${esc(l.commodity)}</span></td>
+      <td class="mono">${l.tonnage} t</td>
+      <td class="mono">${fmtNum(l.km)} km</td>
+      <td class="mono" style="color:var(--green);font-weight:600">${fmtR(l.rate)} /t</td>
+      <td class="mono">${l.remaining}/${l.trucks}</td>
+      <td><span class="chip ${st[0]}">${st[1]}</span></td>
+      <td><div class="rowactions">
+        <button class="btn btn-ghost btn-sm" onclick="openLoadForm('${l.id}')">Edit</button>
+        ${l.status !== "closed"
+          ? `<button class="btn btn-danger btn-sm" onclick="closeLoad('${l.id}')">Close</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="reopenLoad('${l.id}')">Reopen</button>`}
+      </div></td>
+    </tr>`;
+  }).join("");
+  return `
+    <div class="tablewrap"><table>
+      <thead><tr><th>Ref</th><th>Route</th><th>Tonnage</th><th>Distance</th><th>Rate</th><th>Trucks open</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+function closeLoad(id){ const l = load(id); l.status = "closed"; save(); render(); toast(`${id} closed — removed from the board`); }
+function reopenLoad(id){ const l = load(id); l.status = l.remaining > 0 ? "open" : "full"; save(); render(); toast(`${id} reopened`); }
+
+function openLoadForm(id){
+  const l = id ? load(id) : null;
+  showModal(`
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">${l ? "Editing " + esc(l.id) : "New load"}</div>
+        <h2>${l ? "Edit load" : "Post a load to the board"}</h2>
+      </div>
+      <button class="x" onclick="closeModal()" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <form onsubmit="submitLoad(event, ${l ? `'${l.id}'` : "null"})">
+        <div class="fgrid">
+          <div class="field"><label for="lf-from">Origin town <span class="req">*</span></label>
+            <input id="lf-from" required value="${esc(l?.from ?? "")}" placeholder="e.g. Steelpoort"></div>
+          <div class="field"><label for="lf-fromP">Origin province/country <span class="req">*</span></label>
+            <input id="lf-fromP" required value="${esc(l?.fromP ?? "")}" placeholder="e.g. Limpopo"></div>
+          <div class="field"><label for="lf-to">Destination town <span class="req">*</span></label>
+            <input id="lf-to" required value="${esc(l?.to ?? "")}" placeholder="e.g. Richards Bay"></div>
+          <div class="field"><label for="lf-toP">Destination province/country <span class="req">*</span></label>
+            <input id="lf-toP" required value="${esc(l?.toP ?? "")}" placeholder="e.g. KwaZulu-Natal"></div>
+          <div class="field"><label for="lf-com">Commodity <span class="req">*</span></label>
+            <input id="lf-com" required value="${esc(l?.commodity ?? "")}" placeholder="e.g. Chrome concentrate"></div>
+          <div class="field"><label for="lf-date">Loading date <span class="req">*</span></label>
+            <input id="lf-date" type="date" required value="${esc(l?.date ?? "")}"></div>
+          <div class="field"><label for="lf-ton">Tonnage per truck <span class="req">*</span></label>
+            <input id="lf-ton" type="number" min="1" max="60" required value="${l?.tonnage ?? 34}"></div>
+          <div class="field"><label for="lf-km">Distance (km) <span class="req">*</span></label>
+            <input id="lf-km" type="number" min="1" required value="${l?.km ?? ""}"></div>
+          <div class="field"><label for="lf-rate">Rate offered (R / ton) <span class="req">*</span></label>
+            <input id="lf-rate" type="number" min="1" required value="${l?.rate ?? ""}"></div>
+          <div class="field"><label for="lf-trucks">Trucks needed <span class="req">*</span></label>
+            <input id="lf-trucks" type="number" min="1" max="100" required value="${l?.trucks ?? ""}"></div>
+          <div class="field full"><label for="lf-notes">Load notes (shown to transporters)</label>
+            <textarea id="lf-notes" placeholder="Equipment requirements, loading times, documentation&hellip;">${esc(l?.notes ?? "")}</textarea></div>
+        </div>
+        <div class="formfoot">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-solid">${l ? "Save changes" : "Publish to board"}</button>
+        </div>
+      </form>
+    </div>`, true);
+}
+
+function submitLoad(e, id){
+  e.preventDefault();
+  const vals = {
+    from:$("lf-from").value.trim(), fromP:$("lf-fromP").value.trim(),
+    to:$("lf-to").value.trim(), toP:$("lf-toP").value.trim(),
+    commodity:$("lf-com").value.trim(), date:$("lf-date").value,
+    tonnage:Number($("lf-ton").value), km:Number($("lf-km").value),
+    rate:Number($("lf-rate").value), trucks:Number($("lf-trucks").value),
+    notes:$("lf-notes").value.trim() || "—"
+  };
+  if (id){
+    const l = load(id);
+    const booked = l.trucks - l.remaining;
+    Object.assign(l, vals);
+    l.remaining = Math.max(0, vals.trucks - booked);
+    l.status = l.status === "closed" ? "closed" : (l.remaining > 0 ? "open" : "full");
+    toast(`${id} updated`);
+  } else {
+    const nid = "LD-" + S.seq.load++;
+    S.loads.unshift({ id:nid, ...vals, remaining:vals.trucks, status:"open" });
+    toast(`${nid} published to the load board`);
+  }
+  save(); closeModal(); render();
+}
+
+/* ---------- admin: booking requests ---------- */
+function requestCards(list){
+  if (!list.length) return `<div class="empty"><b>Nothing here</b>No requests in this state.</div>`;
+  return list.map(b => {
+    const l = load(b.loadId), c = tr(b.trId);
+    const [cState, cLabel] = complianceState(c);
+    const [bc, bl] = BK_CHIP[b.status];
+    return `
+    <article class="loadcard" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto">
+      <div>
+        <div class="refline">
+          <span class="ref">${esc(b.id)} &middot; ${fmtDate(b.created)}</span>
+          <span class="chip ${bc}">${bl}</span>
+        </div>
+        <div style="font-size:16.5px;font-weight:750">${esc(c.company)}</div>
+        <div style="font-size:12.5px;color:var(--ink-soft);margin-top:2px">
+          ${esc(c.contact)} &middot; ${esc(c.phone)} &middot; fleet of ${c.fleet}
+          &middot; <span class="chip ${cState}" style="vertical-align:1px">${cLabel}</span>
+        </div>
+        ${b.note ? `<div style="font-size:13px;color:var(--ink-soft);margin-top:8px;border-left:3px solid var(--line);padding-left:10px">&ldquo;${esc(b.note)}&rdquo;</div>` : ""}
+      </div>
+      <div class="specs">
+        <div class="spec"><div class="k">Load</div><div class="v">${esc(l.from)} &rarr; ${esc(l.to)}</div></div>
+        <div class="spec"><div class="k">Trucks</div><div class="v mono">${b.trucks} &times; ${l.tonnage} t</div></div>
+        <div class="spec"><div class="k">Value</div><div class="v mono">${fmtR(b.trucks * l.tonnage * l.rate)}</div></div>
+      </div>
+      <div class="rowactions" style="flex-direction:column;align-items:stretch">
+        ${ b.status === "pending" ? `
+          <button class="btn btn-solid btn-sm" onclick="decideBooking('${b.id}','approved')">Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="decideBooking('${b.id}','declined')">Decline</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="decideBooking('${b.id}','pending')">Move back to pending</button>` }
+      </div>
+    </article>`;
+  }).join("");
+}
+
+function adminRequests(){
+  const pending = S.bookings.filter(b => b.status === "pending");
+  const done = S.bookings.filter(b => b.status !== "pending");
+  return `
+    <div class="loadlist">${requestCards(pending)}</div>
+    ${done.length ? `
+      <h3 style="margin:30px 0 12px;font-size:14px;color:var(--ink-soft);font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase">Decided</h3>
+      <div class="loadlist">${requestCards(done)}</div>` : ""}`;
+}
+
+function decideBooking(id, status){
+  const b = S.bookings.find(x => x.id === id);
+  const l = load(b.loadId);
+  const prev = b.status;
+  // adjust truck allocation when approval state changes
+  if (prev !== "approved" && status === "approved") l.remaining = Math.max(0, l.remaining - b.trucks);
+  if (prev === "approved" && status !== "approved") l.remaining = Math.min(l.trucks, l.remaining + b.trucks);
+  l.status = l.status === "closed" ? "closed" : (l.remaining > 0 ? "open" : "full");
+  b.status = status;
+  save(); render();
+  toast(status === "approved" ? `${id} approved — ${tr(b.trId).company} notified`
+      : status === "declined" ? `${id} declined — carrier notified`
+      : `${id} moved back to pending`);
+}
+
+/* ---------- admin: transporters ---------- */
+function adminTransporters(){
+  const rows = S.transporters.map(t => {
+    const [cState, cLabel] = complianceState(t);
+    const bookings = S.bookings.filter(b => b.trId === t.id && b.status === "approved").length;
+    return `<tr>
+      <td><b>${esc(t.company)}</b><span class="sub">${esc(t.id)} &middot; ${esc(t.base)}</span></td>
+      <td>${esc(t.contact)}<span class="sub">${esc(t.phone)}</span></td>
+      <td class="mono">${t.fleet}</td>
+      <td style="max-width:220px">${t.types.map(x=>`<span class="chip grey" style="margin:1px 3px 1px 0">${esc(x)}</span>`).join("")}</td>
+      <td class="mono">${bookings}</td>
+      <td><span class="chip ${cState}">${cLabel}</span></td>
+      <td><div class="rowactions"><button class="btn btn-ghost btn-sm" onclick="openTransporterDetail('${t.id}')">Review</button></div></td>
+    </tr>`;
+  }).join("");
+  return `
+    <div class="tablewrap"><table>
+      <thead><tr><th>Company</th><th>Contact</th><th>Fleet</th><th>Truck types</th><th>Loads won</th><th>Compliance</th><th style="text-align:right"></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+function openTransporterDetail(id){
+  const t = tr(id);
+  const [cState, cLabel] = complianceState(t);
+  showModal(`
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">${esc(t.id)} &middot; registered carrier</div>
+        <h2>${esc(t.company)}</h2>
+      </div>
+      <button class="x" onclick="closeModal()" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <dl class="kv" style="margin-bottom:18px">
+        <dt>Contact</dt><dd>${esc(t.contact)} &middot; ${esc(t.phone)} &middot; ${esc(t.email)}</dd>
+        <dt>Base</dt><dd>${esc(t.base)}</dd>
+        <dt>Reg no.</dt><dd>${esc(t.reg)}</dd>
+        <dt>Fleet</dt><dd>${t.fleet} trucks &middot; ${t.types.join(", ")}</dd>
+        <dt>GIT cover</dt><dd>${esc(t.git)}</dd>
+        <dt>Compliance</dt><dd><span class="chip ${cState}">${cLabel}</span></dd>
+      </dl>
+      <div class="formsection" style="border-top:1px dashed var(--line)">
+        <legend>Documents on file</legend>
+        ${t.docs.map((d,i) => {
+          const [dc, dl] = DOC_CHIP[d.status];
+          return `<div class="docupload" style="background:#fff">
+            <div class="n">${esc(d.name)}<small>${d.expiry === "—" ? "no expiry recorded" : "expires " + fmtDate(d.expiry)}</small></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="chip ${dc}">${dl}</span>
+              ${d.status !== "verified" ? `<button class="btn btn-ghost btn-sm" onclick="verifyDoc('${t.id}',${i})">Mark verified</button>` : ""}
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`, true);
+}
+
+function verifyDoc(trId, idx){
+  const t = tr(trId);
+  t.docs[idx].status = "verified";
+  save(); render(); openTransporterDetail(trId);
+  toast(`${t.docs[idx].name} verified for ${t.company}`);
+}
+
+/* =====================================================================
+   MODAL PLUMBING + RENDER
+   ===================================================================== */
+function showModal(inner, wide){
+  $("modalroot").innerHTML = `
+    <div class="overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal ${wide ? "wide" : ""}" role="dialog" aria-modal="true">${inner}</div>
+    </div>`;
+  document.body.style.overflow = "hidden";
+}
+function closeModal(){
+  $("modalroot").innerHTML = "";
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+function render(){
+  renderHeader();
+  $("app").innerHTML =
+    S.role === "admin" ? renderAdmin() :
+    S.view === "account" ? renderAccount() :
+    renderBoard();
+}
+
+loadState();
+render();
+</script>
+</body>
+</html>
