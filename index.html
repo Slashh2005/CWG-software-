@@ -7,16 +7,16 @@
 <style>
   /* ============ TOKENS ============ */
   :root{
-    --paper:#FAFAF7;
+    --paper:#FAFAF8;
     --card:#FFFFFF;
-    --ink:#17211B;
-    --ink-soft:#4C5A51;
-    --ink-faint:#7C877F;
-    --line:#DFE4DC;
-    --line-soft:#ECEFE9;
-    --green:#1E5B45;
-    --green-deep:#0F3A2B;
-    --green-tint:#E8F0EB;
+    --ink:#161616;
+    --ink-soft:#54544F;
+    --ink-faint:#8A8A82;
+    --line:#E1E1DC;
+    --line-soft:#EEEEE9;
+    --green:#111111;
+    --green-deep:#000000;
+    --green-tint:#ECECE7;
     --amber:#B97F0E;
     --amber-tint:#FBF3DF;
     --red:#AF3E2B;
@@ -27,7 +27,7 @@
     --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
     --radius:8px;
     --shadow:0 1px 2px rgba(23,33,27,.05),0 4px 16px rgba(23,33,27,.06);
-    --shadow-lg:0 8px 40px rgba(15,58,43,.18);
+    --shadow-lg:0 8px 40px rgba(0,0,0,.20);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{-webkit-text-size-adjust:100%}
@@ -44,19 +44,19 @@
 
   /* ============ DEMO BAR ============ */
   .demobar{
-    background:var(--ink);color:#D8DED9;
+    background:#1C1C1C;color:#DDDDDD;
     display:flex;align-items:center;gap:14px;flex-wrap:wrap;
     padding:7px 20px;font-size:12px;
   }
   .demobar .tag{
     font-family:var(--mono);font-size:10px;letter-spacing:.14em;
-    border:1px solid #4A554D;border-radius:3px;padding:2px 7px;color:#F2C14E;
+    border:1px solid #555550;border-radius:3px;padding:2px 7px;color:#F2C14E;
   }
   .demobar .spacer{flex:1}
-  .roleswitch{display:flex;border:1px solid #4A554D;border-radius:6px;overflow:hidden}
-  .roleswitch button{padding:4px 14px;font-size:12px;color:#AEB8B0}
-  .roleswitch button.on{background:var(--green);color:#fff}
-  .demobar .reset{color:#8B968D;text-decoration:underline;text-underline-offset:2px;font-size:12px}
+  .roleswitch{display:flex;border:1px solid #555550;border-radius:6px;overflow:hidden}
+  .roleswitch button{padding:4px 14px;font-size:12px;color:#B4B4AE}
+  .roleswitch button.on{background:#fff;color:#111}
+  .demobar .reset{color:#96968F;text-decoration:underline;text-underline-offset:2px;font-size:12px}
   .demobar .reset:hover{color:#fff}
 
   /* ============ HEADER ============ */
@@ -72,17 +72,17 @@
   }
   .brand .mark svg{display:block}
   .brand .word{font-weight:800;letter-spacing:.16em;font-size:16px}
-  .brand .word span{font-weight:400;letter-spacing:.02em;color:#9DC3B2;font-size:12px;display:block;margin-top:-2px}
+  .brand .word span{font-weight:400;letter-spacing:.02em;color:#A9A9A3;font-size:12px;display:block;margin-top:-2px}
   nav.mainnav{display:flex;gap:4px;flex:1}
   nav.mainnav button{
-    color:#BCD3C7;padding:8px 14px;border-radius:6px;font-size:14px;
+    color:#BFBFB9;padding:8px 14px;border-radius:6px;font-size:14px;
   }
   nav.mainnav button:hover{color:#fff}
   nav.mainnav button.on{background:rgba(255,255,255,.13);color:#fff;font-weight:600}
   .header-user{display:flex;align-items:center;gap:12px;padding:10px 0}
   .header-user .who{text-align:right;line-height:1.25}
   .header-user .who b{font-size:13px;display:block}
-  .header-user .who small{color:#9DC3B2;font-size:11px}
+  .header-user .who small{color:#A9A9A3;font-size:11px}
   .avatar{
     width:34px;height:34px;border-radius:50%;background:var(--amber);color:#fff;flex:none;
     display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
@@ -213,7 +213,7 @@
   .tile .v{font-family:var(--mono);font-size:30px;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
   .tile .v .unit{font-size:13px;color:var(--ink-faint);font-weight:500}
   .tile.hot{background:var(--green-deep);border-color:var(--green-deep);color:#fff}
-  .tile.hot .k{color:#9DC3B2}
+  .tile.hot .k{color:#A3A39D}
 
   /* ============ TABLES ============ */
   .tablewrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow-x:auto}
@@ -337,9 +337,9 @@
     font-size:14px;box-shadow:var(--shadow-lg);z-index:90;
     display:flex;align-items:center;gap:9px;animation:pop .2s ease;max-width:90vw;
   }
-  .toast::before{content:"";width:8px;height:8px;border-radius:50%;background:#5FBF8F;flex:none}
+  .toast::before{content:"";width:8px;height:8px;border-radius:50%;background:#F2C14E;flex:none}
   .signin-strip{
-    background:var(--green-tint);border:1px solid #CBDED3;border-radius:var(--radius);
+    background:var(--green-tint);border:1px solid #D8D8D2;border-radius:var(--radius);
     padding:13px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
     font-size:13.5px;color:var(--green-deep);
   }
@@ -380,9 +380,9 @@
   <div class="brand">
     <div class="mark" aria-hidden="true">
       <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path d="M2 15 L9 15 L13 7 L20 7" stroke="#0F3A2B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M2 15 L9 15 L13 7 L20 7" stroke="#000000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
         <circle cx="2.5" cy="15" r="2.4" fill="#B97F0E"/>
-        <circle cx="19.5" cy="7" r="2.4" fill="#1E5B45"/>
+        <circle cx="19.5" cy="7" r="2.4" fill="#111111"/>
       </svg>
     </div>
     <div class="word">LINEHAUL<span>load board &middot; placeholder name</span></div>
@@ -549,7 +549,7 @@ function renderHeader(){
   if (S.role === "admin"){
     userHtml = `
       <div class="who"><b>CWG Admin</b><small>owner access</small></div>
-      <div class="avatar" style="background:var(--green)">CW</div>`;
+      <div class="avatar" style="background:#fff;color:#000">CW</div>`;
   } else if (me()){
     const m = me();
     userHtml = `
