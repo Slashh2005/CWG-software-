@@ -139,6 +139,7 @@
     transition:border-color .12s, box-shadow .12s;
   }
   .loadcard:hover{border-color:var(--green);box-shadow:var(--shadow-lg)}
+  .loadcard > *{min-width:0}
   .loadcard.is-full{opacity:.62}
   .loadcard .refline{
     display:flex;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap;
@@ -169,8 +170,9 @@
   .spec{padding:0 18px;border-left:1px solid var(--line-soft)}
   .spec:first-child{border-left:none;padding-left:0}
   .spec .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
-  .spec .v{font-size:14.5px;font-weight:600;margin-top:1px;white-space:nowrap}
-  .spec .v.mono{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+  .spec{min-width:0}
+  .spec .v{font-size:14.5px;font-weight:600;margin-top:1px;overflow-wrap:break-word}
+  .spec .v.mono{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
   .rateblock{text-align:right}
   .rateblock .rate{
     font-family:var(--mono);font-size:23px;font-weight:700;color:var(--green);
