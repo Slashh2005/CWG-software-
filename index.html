@@ -50,7 +50,7 @@
   }
   .demobar .tag{
     font-family:var(--mono);font-size:10px;letter-spacing:.14em;
-    border:1px solid #555550;border-radius:3px;padding:2px 7px;color:#F2C14E;
+    border:1px solid #555550;border-radius:3px;padding:2px 7px;color:#F5F5F0;
   }
   .demobar .spacer{flex:1}
   .roleswitch{display:flex;border:1px solid #555550;border-radius:6px;overflow:hidden}
@@ -239,6 +239,7 @@
   .panel h3 .sub{font-weight:400;font-size:12.5px;color:var(--ink-faint)}
   .panel .body{margin-top:14px}
   .twocol{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+  .twocol > *{min-width:0}
   @media(max-width:900px){.twocol{grid-template-columns:1fr}}
   .kv{display:grid;grid-template-columns:auto 1fr;gap:7px 18px;font-size:13.5px}
   .kv dt{color:var(--ink-faint);font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-top:2px}
@@ -337,7 +338,7 @@
     font-size:14px;box-shadow:var(--shadow-lg);z-index:90;
     display:flex;align-items:center;gap:9px;animation:pop .2s ease;max-width:90vw;
   }
-  .toast::before{content:"";width:8px;height:8px;border-radius:50%;background:#F2C14E;flex:none}
+  .toast::before{content:"";width:8px;height:8px;border-radius:50%;background:#FFFFFF;flex:none}
   .signin-strip{
     background:var(--green-tint);border:1px solid #D8D8D2;border-radius:var(--radius);
     padding:13px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
@@ -361,13 +362,80 @@
   .demoaccounts .who small{color:var(--ink-faint);font-size:12px}
   .orline{display:flex;align-items:center;gap:12px;color:var(--ink-faint);font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;margin:18px 0 4px}
   .orline::before,.orline::after{content:"";flex:1;border-top:1px solid var(--line)}
+
+  /* ============ ADMIN REQUEST CARDS ============ */
+  .reqcard{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto}
+  .reqactions{flex-direction:column;align-items:stretch}
+  @media(max-width:860px){
+    .reqcard{grid-template-columns:1fr}
+    .reqactions{flex-direction:row}
+    .reqactions .btn{flex:1}
+  }
+
+  /* ============ MOBILE ============ */
+  @media(max-width:700px){
+    .demobar{padding:8px 14px;gap:8px}
+    .demohint{display:none}
+    .demobar .spacer{display:none}
+    .roleswitch{order:3;flex-basis:100%}
+    .roleswitch button{flex:1;padding:9px 6px;text-align:center;white-space:nowrap}
+    .demobar .reset{margin-left:auto}
+    header.site{padding:0 14px;gap:0 14px}
+    .brand .word span{display:none}
+    nav.mainnav{order:3;flex-basis:100%;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+    nav.mainnav::-webkit-scrollbar{display:none}
+    nav.mainnav button{white-space:nowrap}
+    .header-user{margin-left:auto}
+    .header-user .who{display:none}
+  }
+  @media(max-width:640px){
+    body{font-size:14.5px}
+    main{padding:18px 14px 60px}
+    .pagehead{margin-bottom:16px}
+    .pagehead h1{font-size:22px}
+    .eyebrow{font-size:10px}
+    .btn{padding:12px 18px}
+    .btn-sm{padding:9px 12px}
+    .filters{padding:10px 12px;gap:8px}
+    .filters input[type=search]{flex-basis:100%;font-size:16px}
+    .filters select{flex:1;font-size:16px}
+    .filters label{display:none}
+    .count-pill{margin-left:0;flex-basis:100%;text-align:center}
+    .loadcard{padding:15px 16px;gap:12px 20px}
+    .loadcard .refline{margin-bottom:7px}
+    .route .pt b{font-size:16px}
+    .spec{padding:0 12px}
+    .specs{width:100%;justify-content:space-between}
+    .rateblock .rate{font-size:21px}
+    .rateblock .btn{flex-basis:100%;margin-left:0}
+    .tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .tile{padding:13px 14px}
+    .tile .v{font-size:25px}
+    .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tabs button{white-space:nowrap;padding:9px 12px}
+    .panel{padding:16px 15px}
+    .overlay{padding:10px 8px 8px}
+    .modal-head{padding:16px 16px 0}
+    .modal-head h2{font-size:17px}
+    .modal-body{padding:12px 16px 18px}
+    .field input,.field select,.field textarea{font-size:16px;padding:10px 12px}
+    .formfoot{flex-direction:column-reverse;align-items:stretch}
+    .formfoot .note{margin:0;max-width:none;text-align:center}
+    .signin-strip{padding:12px 14px}
+    .signin-strip .btn{margin-left:0;flex-basis:100%}
+    .kv{grid-template-columns:1fr;gap:2px 0}
+    .kv dt{padding-top:8px}
+    .kv dt:first-child{padding-top:0}
+    footer.site{padding:16px 14px;font-size:11px}
+  }
 </style>
 </head>
 <body>
 
 <div class="demobar">
   <span class="tag">DEMO MOCKUP</span>
-  <span>Sample data only — no live bookings. Flip the view to present both sides:</span>
+  <span class="demohint">Sample data only — no live bookings. Flip the view to present both sides:</span>
   <span class="spacer"></span>
   <div class="roleswitch" role="group" aria-label="Demo view">
     <button id="rs-transporter" onclick="setRole('transporter')">Transporter view</button>
@@ -1129,7 +1197,7 @@ function requestCards(list){
     const [cState, cLabel] = complianceState(c);
     const [bc, bl] = BK_CHIP[b.status];
     return `
-    <article class="loadcard" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto">
+    <article class="loadcard reqcard">
       <div>
         <div class="refline">
           <span class="ref">${esc(b.id)} &middot; ${fmtDate(b.created)}</span>
@@ -1147,7 +1215,7 @@ function requestCards(list){
         <div class="spec"><div class="k">Trucks</div><div class="v mono">${b.trucks} &times; ${l.tonnage} t</div></div>
         <div class="spec"><div class="k">Value</div><div class="v mono">${fmtR(b.trucks * l.tonnage * l.rate)}</div></div>
       </div>
-      <div class="rowactions" style="flex-direction:column;align-items:stretch">
+      <div class="rowactions reqactions">
         ${ b.status === "pending" ? `
           <button class="btn btn-solid btn-sm" onclick="decideBooking('${b.id}','approved')">Approve</button>
           <button class="btn btn-danger btn-sm" onclick="decideBooking('${b.id}','declined')">Decline</button>`
