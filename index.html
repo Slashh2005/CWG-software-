@@ -81,6 +81,10 @@
   }
   nav.mainnav button:hover{color:#fff}
   nav.mainnav button.on{background:rgba(255,255,255,.13);color:#fff;font-weight:600}
+  .navbadge{
+    font-family:var(--mono);font-size:10.5px;background:var(--amber);color:#fff;
+    border-radius:99px;padding:1px 7px;margin-left:7px;vertical-align:1px;font-weight:700;
+  }
   .header-user{display:flex;align-items:center;gap:12px;padding:10px 0}
   .header-user .who{text-align:right;line-height:1.25}
   .header-user .who b{font-size:13px;display:block}
@@ -640,9 +644,10 @@ function renderHeader(){
 
   let navHtml = "";
   if (S.role === "transporter"){
+    const myCount = S.userId ? S.bookings.filter(b => b.trId === S.userId && b.status !== "declined").length : 0;
     navHtml = `
       <button class="${S.view==="board"?"on":""}" onclick="nav('board')">Available loads</button>
-      <button class="${S.view==="account"?"on":""}" onclick="nav('account')">My account</button>`;
+      <button class="${S.view==="account"?"on":""}" onclick="nav('account')">My account${myCount ? `<span class="navbadge">${myCount}</span>` : ""}</button>`;
   } else {
     navHtml = `<button class="on">Admin console</button>`;
   }
@@ -691,17 +696,23 @@ function renderBoard(){
       <button class="btn btn-solid btn-sm" onclick="openAuth()">Sign in / Register</button>
     </div>`;
 
+  const meNow = me();
   const cards = list.map(l => {
     const full = l.remaining <= 0;
+    const mine = meNow && S.bookings.find(b => b.loadId === l.id && b.trId === meNow.id && b.status !== "declined");
     return `
-    <article class="loadcard ${full ? "is-full" : ""}">
+    <article class="loadcard ${full && !mine ? "is-full" : ""}">
       <div>
         <div class="refline">
           <span class="ref">${esc(l.id)}</span>
           <span class="commodity">${esc(l.commodity)}</span>
-          ${ full
-            ? `<span class="chip grey">Fully booked</span>`
-            : `<span class="chip green">${l.remaining} of ${l.trucks} trucks open</span>` }
+          ${ mine
+            ? (mine.status === "approved"
+              ? `<span class="chip green">Booked — you're on this load</span>`
+              : `<span class="chip amber">Requested — awaiting approval</span>`)
+            : full
+              ? `<span class="chip grey">Fully booked</span>`
+              : `<span class="chip green">${l.remaining} of ${l.trucks} trucks open</span>` }
         </div>
         <div class="route">
           <div class="pt"><b>${esc(l.from)}</b><small>${esc(l.fromP)}</small></div>
@@ -716,8 +727,8 @@ function renderBoard(){
       <div class="rateblock">
         <div class="rate">${fmtR(l.rate)}<small> / ton</small></div>
         <div class="est">&asymp; ${fmtR(l.rate * l.tonnage)} per truck</div>
-        <button class="btn ${full ? "btn-ghost" : "btn-solid"}" ${full ? "disabled" : ""}
-          onclick="openLoadDetail('${l.id}')">${full ? "Fully booked" : "View & book"}</button>
+        <button class="btn ${full && !mine ? "btn-ghost" : "btn-solid"}" ${full && !mine ? "disabled" : ""}
+          onclick="openLoadDetail('${l.id}')">${mine ? "View booking" : full ? "Fully booked" : "View & book"}</button>
       </div>
     </article>`;
   }).join("");
@@ -999,14 +1010,19 @@ function renderAccount(){
   }
 
   const [cState, cLabel] = complianceState(m);
-  const myBookings = S.bookings.filter(b => b.trId === m.id);
+  const rank = { approved: 0, pending: 1, declined: 2 };
+  const myBookings = S.bookings.filter(b => b.trId === m.id)
+    .slice().sort((a,b) => rank[a.status] - rank[b.status] || b.created.localeCompare(a.created));
+  const nApproved = myBookings.filter(b => b.status === "approved").length;
+  const nPending  = myBookings.filter(b => b.status === "pending").length;
 
   const bookingRows = myBookings.map(b => {
     const l = load(b.loadId);
     const [bc, bl] = BK_CHIP[b.status];
-    return `<tr>
+    return `<tr${b.status === "approved" ? ' style="background:#F7F7F2"' : ""}>
       <td><span class="mono">${esc(b.id)}</span><span class="sub">${fmtDate(b.created)}</span></td>
       <td><b>${esc(l.from)} &rarr; ${esc(l.to)}</b><span class="sub">${esc(l.commodity)} &middot; ${esc(l.id)}</span></td>
+      <td class="mono">${fmtDate(l.date)}</td>
       <td class="mono">${b.trucks} truck${b.trucks>1?"s":""}</td>
       <td class="mono">${fmtR(l.rate)} /t</td>
       <td class="mono">${fmtR(b.trucks * l.tonnage * l.rate)}</td>
@@ -1064,11 +1080,11 @@ function renderAccount(){
       </div>
       <div>
         <section class="panel">
-          <h3>My bookings <span class="sub">${myBookings.length} total</span></h3>
+          <h3>My bookings <span class="sub">${nApproved} confirmed &middot; ${nPending} awaiting approval</span></h3>
           <div class="body">
             ${ myBookings.length
               ? `<div class="tablewrap" style="box-shadow:none"><table>
-                  <thead><tr><th>Request</th><th>Route</th><th>Trucks</th><th>Rate</th><th>Est. value</th><th>Status</th></tr></thead>
+                  <thead><tr><th>Request</th><th>Route</th><th>Loading</th><th>Trucks</th><th>Rate</th><th>Est. value</th><th>Status</th></tr></thead>
                   <tbody>${bookingRows}</tbody></table></div>`
               : `<div class="empty"><b>No bookings yet</b>Head to the load board and book your first load.<br><br><button class="btn btn-solid btn-sm" onclick="nav('board')">Browse loads</button></div>` }
           </div>
