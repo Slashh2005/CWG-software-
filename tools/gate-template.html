@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Load Board — Client Preview</title>
+<style>
+  :root{
+    --paper:#FAFAF8; --card:#FFFFFF; --ink:#161616; --ink-soft:#54544F;
+    --ink-faint:#8A8A82; --line:#E1E1DC; --amber:#B97F0E; --red:#AF3E2B;
+    --mono:"SF Mono","Cascadia Code","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.5;min-height:100vh;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .gate{
+    width:100%;max-width:410px;background:var(--card);
+    border:1px solid var(--line);border-top:3px solid var(--amber);
+    border-radius:16px;padding:40px 32px 32px;
+    box-shadow:0 1px 2px rgba(20,20,16,.04),0 10px 34px rgba(20,20,16,.07);
+    animation:rise .4s cubic-bezier(.2,.7,.3,1);
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .mark{
+    width:42px;height:42px;border-radius:10px;background:#000;
+    display:flex;align-items:center;justify-content:center;margin-bottom:20px;
+  }
+  .eyebrow{
+    font-family:var(--mono);font-size:10px;letter-spacing:.17em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:8px;
+  }
+  h1{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-bottom:8px}
+  .lede{font-size:14px;color:var(--ink-soft);margin-bottom:24px}
+  label{
+    display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px;
+  }
+  input{
+    width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;
+    background:#fff;font-size:16px;font-family:var(--mono);letter-spacing:.04em;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(22,22,22,.07)}
+  input.bad{border-color:var(--red);box-shadow:0 0 0 3px rgba(175,62,43,.09)}
+  button{
+    width:100%;margin-top:14px;padding:13px;border:none;border-radius:10px;
+    background:#000;color:#fff;font:inherit;font-weight:700;font-size:15px;
+    cursor:pointer;transition:opacity .15s;
+  }
+  button:hover{opacity:.86}
+  button:disabled{opacity:.55;cursor:default}
+  .err{
+    color:var(--red);font-size:13px;margin-top:12px;min-height:19px;
+    display:flex;align-items:center;gap:7px;
+  }
+  .err:empty{margin-top:0}
+  .err span{
+    width:5px;height:5px;border-radius:99px;background:var(--red);flex:none;
+  }
+  .foot{
+    margin-top:26px;padding-top:18px;border-top:1px solid #EEEEE9;
+    font-size:12.5px;color:var(--ink-faint);text-align:center;line-height:1.6;
+  }
+  .shake{animation:shake .32s}
+  @keyframes shake{
+    0%,100%{transform:none}20%{transform:translateX(-6px)}
+    50%{transform:translateX(5px)}80%{transform:translateX(-3px)}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+  <main class="gate" id="gate">
+    <div class="mark" aria-hidden="true">
+      <svg width="23" height="23" viewBox="0 0 22 22" fill="none">
+        <path d="M2 15 L9 15 L13 7 L20 7" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="2.5" cy="15" r="2.4" fill="#B97F0E"/>
+        <circle cx="19.5" cy="7" r="2.4" fill="#FFFFFF"/>
+      </svg>
+    </div>
+    <div class="eyebrow">Private preview</div>
+    <h1>Load booking platform</h1>
+    <p class="lede">This preview is shared privately. Enter the access code you were given to view it.</p>
+
+    <form id="f" autocomplete="off">
+      <label for="pw">Access code</label>
+      <input id="pw" type="password" inputmode="text" autocapitalize="off"
+             autocorrect="off" spellcheck="false" placeholder="••••••••" aria-describedby="err">
+      <button type="submit" id="go">View preview</button>
+      <div class="err" id="err" role="alert" aria-live="polite"></div>
+    </form>
+
+    <div class="foot">Access is provided by CWG Holdings.<br>Contact them if you need a code.</div>
+  </main>
+
+<script>
+(function(){
+  var PAYLOAD = "__PAYLOAD__";
+  var ITER = 200000;
+  var f = document.getElementById("f"), pw = document.getElementById("pw"),
+      go = document.getElementById("go"), err = document.getElementById("err"),
+      gate = document.getElementById("gate");
+
+  function b64(s){
+    var bin = atob(s), out = new Uint8Array(bin.length);
+    for (var i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function fail(msg, silent){
+    err.innerHTML = msg ? '<span></span>' + msg : "";
+    if (!silent){ pw.classList.add("bad"); gate.classList.add("shake");
+      setTimeout(function(){ gate.classList.remove("shake"); }, 340); }
+    go.disabled = false; go.textContent = "View preview";
+  }
+  async function unlock(code, silent){
+    if (!code){ return fail("Enter the access code to continue."); }
+    if (!window.crypto || !crypto.subtle){
+      return fail("This browser can't open the preview — please use Chrome, Safari or Edge.", true);
+    }
+    go.disabled = true; go.textContent = "Opening…"; err.textContent = "";
+    var raw = b64(PAYLOAD);
+    var salt = raw.slice(0,16), iv = raw.slice(16,28), data = raw.slice(28);
+    try {
+      var norm = new TextEncoder().encode(code.trim().toLowerCase());
+      var base = await crypto.subtle.importKey("raw", norm, "PBKDF2", false, ["deriveKey"]);
+      var key = await crypto.subtle.deriveKey(
+        { name:"PBKDF2", salt:salt, iterations:ITER, hash:"SHA-256" },
+        base, { name:"AES-GCM", length:256 }, false, ["decrypt"]);
+      var plain = await crypto.subtle.decrypt({ name:"AES-GCM", iv:iv }, key, data);
+      var html = new TextDecoder().decode(plain);
+      try { sessionStorage.setItem("cwg_pv", code); } catch(e){}
+      document.open(); document.write(html); document.close();
+    } catch(e){
+      try { sessionStorage.removeItem("cwg_pv"); } catch(e2){}
+      fail(silent ? "" : "That code isn't right — please check and try again.", silent);
+    }
+  }
+
+  f.addEventListener("submit", function(e){ e.preventDefault(); unlock(pw.value); });
+  pw.addEventListener("input", function(){ pw.classList.remove("bad"); err.textContent = ""; });
+
+  var saved = null;
+  try { saved = sessionStorage.getItem("cwg_pv"); } catch(e){}
+  if (saved) unlock(saved, true); else setTimeout(function(){ pw.focus(); }, 250);
+})();
+</script>
+</body>
+</html>
