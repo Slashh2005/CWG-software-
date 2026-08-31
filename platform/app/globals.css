@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* Design tokens carried over verbatim from the approved mockup, so the built
+   product inherits the look the client signed off on. */
+@theme {
+  --color-paper:      #FAFAF8;
+  --color-card:       #FFFFFF;
+  --color-ink:        #161616;
+  --color-ink-soft:   #54544F;
+  --color-ink-faint:  #8A8A82;
+  --color-line:       #E1E1DC;
+  --color-line-soft:  #EEEEE9;
+  --color-primary:    #111111;
+  --color-amber:      #B97F0E;
+  --color-amber-tint: #FBF3DF;
+  --color-danger:     #AF3E2B;
+  --color-danger-tint:#F9E9E5;
+  --color-info:       #2C5878;
+  --color-info-tint:  #E7EFF4;
+
+  --font-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --radius-card: 12px;
+  --shadow-card: 0 1px 2px rgba(20,20,16,.04), 0 6px 20px rgba(20,20,16,.05);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* The mockup is a light-only design; opting out of the UA dark treatment
+   keeps form controls consistent with it. */
+:root { color-scheme: light; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
