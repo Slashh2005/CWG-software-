@@ -436,6 +436,35 @@ textarea:focus-visible {
   100% { top: 100%; }
 }
 
+/* ---------- Story / manifesto (home page) ----------
+   A short, emotive brand moment between the hero and the footer —
+   pure typography, no card or photo, so it reads like a magazine
+   pull-quote rather than another content block. */
+.story { padding: 140px 0; background: var(--cream); text-align: center; }
+.story-inner { max-width: 760px; margin: 0 auto; }
+.story-icon {
+  width: 52px; height: 52px;
+  margin: 0 auto 22px;
+  color: var(--gold-dark);
+}
+.story-icon svg { width: 100%; height: 100%; }
+.story .eyebrow { justify-content: center; }
+.story-quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(22px, 3.2vw, 32px);
+  line-height: 1.55;
+  color: var(--text-heading);
+}
+.story-body {
+  margin-top: 26px;
+  font-size: 19px;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+.story .btn { margin-top: 38px; }
+
 /* ---------- Placeholder / photo-frame system ----------
    Real photography drops in automatically: point an <img src>
    at assets/images/<file>.jpg. Until that file exists, onerror
