@@ -538,8 +538,19 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
-/* ---------- Length guide ---------- */
-.length-guide { padding: 120px 0; background: var(--near-black); }
+/* ---------- Length guide ----------
+   Cream/blush palette (matches the studio's length-guide photography,
+   which is shot on a warm cream backdrop) instead of the site's dark
+   sections, so the real photos sit flush with their cards. */
+.length-guide {
+  padding: 120px 0;
+  background: linear-gradient(180deg, var(--cream), var(--beige));
+}
+.length-guide .eyebrow { color: var(--gold-dark); }
+.length-guide .eyebrow::before { background: linear-gradient(90deg, transparent, var(--gold-dark)); }
+.length-guide .eyebrow::after { background: linear-gradient(90deg, var(--gold-dark), transparent); }
+.length-guide .section-title { color: var(--chocolate-light); }
+.length-guide .lede { color: rgba(74, 46, 30, 0.72); }
 .length-grid {
   display: grid;
   gap: 22px;
@@ -547,26 +558,43 @@ textarea:focus-visible {
 }
 .length-card {
   text-align: center;
-  padding: 26px 16px 24px;
-  border: 1px solid rgba(200,166,89,0.22);
-  background: var(--panel-black);
+  padding: 26px 16px 28px;
+  border: 1px solid rgba(156, 124, 60, 0.35);
+  background: #fbf6ec;
   border-radius: var(--radius-soft);
+  box-shadow: 0 18px 40px -26px rgba(74, 46, 30, 0.35);
 }
-.length-card .photo-frame { aspect-ratio: 3/4; border-radius: var(--radius-soft); margin-bottom: 18px; }
+.length-card .photo-frame {
+  aspect-ratio: 3/4;
+  border-radius: var(--radius-soft);
+  margin-bottom: 18px;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(200,166,89,0.16), transparent 45%),
+    linear-gradient(155deg, var(--beige) 0%, var(--cream) 60%, #fbf6ec 100%);
+}
+.length-card .photo-frame::before { border-color: rgba(156, 124, 60, 0.4); }
+.length-card .photo-frame::after { color: var(--gold-dark); }
 .length-card h4 {
   font-family: var(--font-serif);
-  color: var(--gold-pale);
+  color: var(--chocolate-light);
   font-size: 15px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-.length-card p { margin-top: 10px; font-size: 15.5px; color: var(--ink-muted); line-height: 1.5; }
+.length-card p { margin-top: 10px; font-size: 15.5px; color: rgba(74, 46, 30, 0.75); line-height: 1.5; }
+.length-card p::after {
+  content: "\2661";
+  display: block;
+  margin-top: 12px;
+  color: var(--gold-dark);
+  font-size: 15px;
+}
 .length-note {
   text-align: center;
   max-width: 560px;
   margin: 44px auto 0;
   font-size: 15px;
-  color: var(--ink-muted);
+  color: rgba(74, 46, 30, 0.65);
   font-style: italic;
 }
 
