@@ -44,9 +44,6 @@
     setupMobileMenu();
     setupActiveNav();
     setupReveal();
-    buildGallery();
-    setupGalleryFilters();
-    setupLightbox();
     setupBookingForm();
   }
 
@@ -114,30 +111,27 @@
     });
   }
 
-  /* ---------------- Active nav link on scroll ---------------- */
+  /* ---------------- Active nav link ----------------
+     The site is split across a few pages now, so "active" is decided
+     by matching each link's page against the current page rather than
+     scroll position. */
   function setupActiveNav() {
-    const links = Array.from(document.querySelectorAll(".nav-links a"));
-    if (!links.length || !("IntersectionObserver" in window)) return;
-    const map = new Map();
+    const links = document.querySelectorAll(".nav-links a, .mobile-menu a[href]:not(.btn)");
+    if (!links.length) return;
+
+    const current = location.pathname.replace(/\/index\.html$/, "/").replace(/\/$/, "") || "/";
+
     links.forEach((a) => {
-      const id = a.getAttribute("href").replace("#", "");
-      const section = document.getElementById(id);
-      if (section) map.set(section, a);
+      let linkPath;
+      try {
+        linkPath = new URL(a.getAttribute("href"), location.href).pathname
+          .replace(/\/index\.html$/, "/")
+          .replace(/\/$/, "") || "/";
+      } catch {
+        return;
+      }
+      if (linkPath === current) a.classList.add("active");
     });
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const link = map.get(entry.target);
-          if (!link) return;
-          if (entry.isIntersecting) {
-            links.forEach((a) => a.classList.remove("active"));
-            link.classList.add("active");
-          }
-        });
-      },
-      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
-    );
-    map.forEach((_, section) => observer.observe(section));
   }
 
   /* ---------------- Fade-in on scroll ---------------- */
@@ -160,129 +154,6 @@
       { threshold: 0.15 }
     );
     items.forEach((el) => observer.observe(el));
-  }
-
-  /* ---------------- Gallery data + build ---------------- */
-  const GALLERY_ITEMS = [
-    { file: "gallery-knotless.jpg", label: "Knotless Braids", cats: ["knotless"] },
-    { file: "gallery-box-braids.jpg", label: "Box Braids", cats: ["box"] },
-    { file: "gallery-bob.jpg", label: "Bob Braids", cats: ["box"] },
-    { file: "gallery-boho-knotless.jpg", label: "Boho Knotless", cats: ["boho", "knotless"] },
-    { file: "gallery-goddess.jpg", label: "Goddess Braids", cats: ["boho"] },
-    { file: "gallery-butterfly.jpg", label: "Butterfly Braids", cats: ["boho"] },
-    { file: "gallery-mermaid-curls.jpg", label: "Mermaid Curls / Curly Braids", cats: ["boho"] },
-    { file: "gallery-french-curls.jpg", label: "French Curls", cats: ["boho"] },
-    { file: "gallery-passion-twists.jpg", label: "Passion Twists", cats: ["twists"] },
-    { file: "gallery-senegalese-twists.jpg", label: "Senegalese Twists", cats: ["twists"] },
-    { file: "gallery-spring-twists.jpg", label: "Spring Twists", cats: ["twists"] },
-    { file: "gallery-cornrows.jpg", label: "Cornrows", cats: ["other"] },
-  ];
-
-  function buildGallery() {
-    const grid = document.getElementById("galleryGrid");
-    if (!grid) return;
-    grid.innerHTML = GALLERY_ITEMS.map((item, i) => `
-      <button type="button" class="gallery-item" data-index="${i}" data-category="${item.cats.join(" ")}" aria-label="View ${item.label} photo">
-        <figure class="photo-frame" data-label="${item.label}">
-          <img src="assets/images/${item.file}" alt="${item.label} styled by Braids by Khanyi" loading="lazy" onerror="this.remove()">
-        </figure>
-        <span class="caption">${item.label}</span>
-      </button>
-    `).join("");
-  }
-
-  /* ---------------- Gallery filters ---------------- */
-  function setupGalleryFilters() {
-    const buttons = document.querySelectorAll(".filter-btn");
-    if (!buttons.length) return;
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        buttons.forEach((b) => {
-          b.classList.remove("active");
-          b.setAttribute("aria-selected", "false");
-        });
-        btn.classList.add("active");
-        btn.setAttribute("aria-selected", "true");
-
-        const filter = btn.dataset.filter;
-        document.querySelectorAll(".gallery-item").forEach((item) => {
-          const cats = (item.dataset.category || "").split(" ");
-          const show = filter === "all" || cats.includes(filter);
-          item.classList.toggle("is-hidden", !show);
-        });
-      });
-    });
-  }
-
-  /* ---------------- Lightbox ---------------- */
-  function setupLightbox() {
-    const lightbox = document.getElementById("lightbox");
-    const imgWrap = document.getElementById("lightboxImageWrap");
-    const img = document.getElementById("lightboxImage");
-    const caption = document.getElementById("lightboxCaption");
-    const closeBtn = document.getElementById("lightboxClose");
-    const prevBtn = document.getElementById("lightboxPrev");
-    const nextBtn = document.getElementById("lightboxNext");
-    if (!lightbox) return;
-
-    let currentIndex = 0;
-
-    function visibleItems() {
-      return Array.from(document.querySelectorAll(".gallery-item:not(.is-hidden)"));
-    }
-
-    function show(index) {
-      const items = visibleItems();
-      if (!items.length) return;
-      currentIndex = (index + items.length) % items.length;
-      const el = items[currentIndex];
-      const label = el.querySelector(".photo-frame").dataset.label;
-      const srcImg = el.querySelector("img");
-
-      imgWrap.dataset.label = label;
-      caption.textContent = label;
-      const existing = imgWrap.querySelector("img");
-      if (existing) existing.remove();
-      if (srcImg) {
-        const clone = document.createElement("img");
-        clone.src = srcImg.src;
-        clone.alt = srcImg.alt;
-        clone.onerror = function () { this.remove(); };
-        imgWrap.appendChild(clone);
-      }
-    }
-
-    function open(index) {
-      show(index);
-      lightbox.classList.add("is-open");
-      document.body.style.overflow = "hidden";
-      closeBtn.focus();
-    }
-    function close() {
-      lightbox.classList.remove("is-open");
-      document.body.style.overflow = "";
-    }
-
-    document.addEventListener("click", (e) => {
-      const item = e.target.closest(".gallery-item");
-      if (!item) return;
-      const items = visibleItems();
-      const idx = items.indexOf(item);
-      if (idx > -1) open(idx);
-    });
-
-    closeBtn.addEventListener("click", close);
-    prevBtn.addEventListener("click", () => show(currentIndex - 1));
-    nextBtn.addEventListener("click", () => show(currentIndex + 1));
-    lightbox.addEventListener("click", (e) => {
-      if (e.target === lightbox) close();
-    });
-    document.addEventListener("keydown", (e) => {
-      if (!lightbox.classList.contains("is-open")) return;
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") show(currentIndex - 1);
-      if (e.key === "ArrowRight") show(currentIndex + 1);
-    });
   }
 
   /* ---------------- Booking form ---------------- */
