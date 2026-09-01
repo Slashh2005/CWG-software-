@@ -528,48 +528,6 @@ textarea:focus-visible {
   .about-grid.reverse > * { direction: ltr; }
 }
 
-/* ---------- Explore (home page links to the other pages) ---------- */
-.explore { padding: 100px 0; background: var(--beige); }
-.explore-grid {
-  display: grid;
-  gap: 26px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-}
-.explore-card {
-  display: block;
-  text-align: center;
-  padding: 44px 26px;
-  border: 1px solid rgba(156, 124, 60, 0.3);
-  border-radius: var(--radius-soft);
-  background: var(--surface);
-  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
-}
-.explore-card:hover {
-  transform: translateY(-6px);
-  border-color: var(--gold-dark);
-  box-shadow: 0 24px 46px -28px rgba(58, 36, 23, 0.35);
-}
-.explore-card .feature-icon { margin-bottom: 22px; }
-.explore-card h4 {
-  font-family: var(--font-serif);
-  color: var(--text-heading);
-  font-size: 19px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.explore-card p { margin-top: 12px; font-size: 15.5px; color: var(--text-muted); }
-.explore-card span.link {
-  display: inline-block;
-  margin-top: 18px;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--gold-dark);
-  border-bottom: 1px solid var(--gold-dark);
-  padding-bottom: 2px;
-}
-
 /* ---------- Services ---------- */
 .services { padding: 120px 0; background: var(--beige); }
 .collection { margin-bottom: 70px; }
